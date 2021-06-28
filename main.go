@@ -28,7 +28,7 @@ func main() {
 	defer func(db *sql.DB) {
 		err := db.Close()
 		if err != nil {
-
+			e.Logger.Fatal(err)
 		}
 	}(gormDB.DB())
 
