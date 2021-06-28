@@ -1,23 +1,38 @@
 package controllers
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/rexiaxm7/practice-go/repositories"
 	"net/http"
 	"strconv"
+
+	"github.com/labstack/echo/v4"
+	"github.com/rexiaxm7/practice-go/repositories"
 )
 
-func GetUsers(context echo.Context) error {
+type UserController interface {
+	GetUsers(context echo.Context) error
+	PostUser(context echo.Context) error
+	GetUser(context echo.Context) error
+	PatchUser(context echo.Context) error
+	DeleteUser(context echo.Context) error
+}
 
-	users, err := repositories.GetUsers()
+type userController struct {
+	userRepository repositories.UserRepository
+}
+
+func NewUserController(userRepository repositories.UserRepository) UserController {
+	return &userController{userRepository: userRepository}
+}
+
+func (u userController) GetUsers(context echo.Context) error {
+	users, err := u.userRepository.GetUsers()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return context.JSON(http.StatusOK, users)
 }
 
-func PostUser(context echo.Context) error {
-
+func (u userController) PostUser(context echo.Context) error {
 	type postUserRequest struct {
 		Name string `json:"name"`
 	}
@@ -26,29 +41,27 @@ func PostUser(context echo.Context) error {
 		return err
 	}
 
-	err := repositories.CreateUser(request.Name)
+	err := u.userRepository.CreateUser(request.Name)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return context.String(http.StatusOK, "ok")
 }
 
-func GetUser(context echo.Context) error {
-
+func (u userController) GetUser(context echo.Context) error {
 	id, err := strconv.Atoi(context.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	user, err := repositories.GetUser(id)
+	user, err := u.userRepository.GetUser(id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return context.JSON(http.StatusOK, user)
 }
 
-func PatchUser(context echo.Context) error {
-
+func (u userController) PatchUser(context echo.Context) error {
 	id, err := strconv.Atoi(context.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -62,21 +75,20 @@ func PatchUser(context echo.Context) error {
 		return err
 	}
 
-	err = repositories.UpdateUser(id, request.Name)
+	err = u.userRepository.UpdateUser(id, request.Name)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return context.NoContent(http.StatusOK)
 }
 
-func DeleteUser(context echo.Context) error {
-
+func (u userController) DeleteUser(context echo.Context) error {
 	id, err := strconv.Atoi(context.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	err = repositories.DeleteUser(id)
+	err = u.userRepository.DeleteUser(id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

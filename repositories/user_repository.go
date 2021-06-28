@@ -1,13 +1,30 @@
 package repositories
 
 import (
-	"github.com/rexiaxm7/practice-go/database"
+	"github.com/jinzhu/gorm"
+
 	"github.com/rexiaxm7/practice-go/models"
 )
 
-func GetUsers() ([]models.User, error) {
+type UserRepository interface {
+	GetUsers() ([]models.User, error)
+	CreateUser(name string) error
+	GetUser(id int) (models.User, error)
+	UpdateUser(id int, name string) error
+	DeleteUser(id int) error
+}
+
+type userRepository struct {
+	gormDB *gorm.DB
+}
+
+func NewUserRepository(gormDB *gorm.DB) UserRepository {
+	return &userRepository{gormDB: gormDB}
+}
+
+func (u userRepository) GetUsers() ([]models.User, error) {
 	var users []models.User
-	result := database.Database.Find(&users)
+	result := u.gormDB.Find(&users)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -15,12 +32,12 @@ func GetUsers() ([]models.User, error) {
 	return users, nil
 }
 
-func CreateUser(name string) error {
+func (u userRepository) CreateUser(name string) error {
 	user := models.User{
 		Name: name,
 	}
 
-	result := database.Database.Create(&user)
+	result := u.gormDB.Create(&user)
 	if result.Error == nil {
 		return result.Error
 	}
@@ -28,9 +45,9 @@ func CreateUser(name string) error {
 	return nil
 }
 
-func GetUser(id int) (models.User, error) {
+func (u userRepository) GetUser(id int) (models.User, error) {
 	user := new(models.User)
-	result := database.Database.First(user, id)
+	result := u.gormDB.First(user, id)
 	if result.Error != nil {
 		return models.User{}, result.Error
 	}
@@ -38,12 +55,12 @@ func GetUser(id int) (models.User, error) {
 	return *user, nil
 }
 
-func UpdateUser(id int, name string) error {
+func (u userRepository) UpdateUser(id int, name string) error {
 	user := models.User{
 		Id: id,
 	}
 
-	result := database.Database.Model(user).Update("name", name)
+	result := u.gormDB.Model(user).Update("name", name)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -51,12 +68,12 @@ func UpdateUser(id int, name string) error {
 	return nil
 }
 
-func DeleteUser(id int) error {
+func (u userRepository) DeleteUser(id int) error {
 	user := models.User{
 		Id: id,
 	}
 
-	result := database.Database.Delete(user)
+	result := u.gormDB.Delete(user)
 	if result.Error != nil {
 		return result.Error
 	}
