@@ -1,0 +1,22 @@
+name: gotest
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+      - develop
+  pull_request:
+jobs:
+  gotest:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: set up
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.16
+      - name: check out
+        uses: actions/checkout@v2
+      - name: test
+        run: go test ./...
